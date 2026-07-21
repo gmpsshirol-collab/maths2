@@ -1,0 +1,25 @@
+{
+  "name": "ಗಣಿತ ಟ್ರ್ಯಾಕರ್",
+  "short_name": "ಗಣಿತ ಟ್ರ್ಯಾಕರ್",
+  "description": "ಪ್ರತಿ ಮಗುವಿನ ಸಂಖ್ಯೆ, ಮಗ್ಗಿ ಮತ್ತು ಲೆಕ್ಕದ ಪ್ರಗತಿ ಪತ್ತೆ ಹಚ್ಚಿ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#faf3e2",
+  "theme_color": "#e08b2e",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

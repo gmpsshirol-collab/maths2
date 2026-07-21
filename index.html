@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ಗಣಿತ ಟ್ರ್ಯಾಕರ್</title>
+
+<!-- ಮೊಬೈಲ್‌ ಆಪ್‌ ರೀತಿ ಕಾಣಿಸಲು (ಹೋಮ್ ಸ್ಕ್ರೀನ್‌ಗೆ ಸೇರಿಸಿದಾಗ) -->
+<meta name="theme-color" content="#e08b2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ಗಣಿತ ಟ್ರ್ಯಾಕರ್">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700;800&family=Baloo+2:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --board:#faf3e2;
+    --board-dark:#f1e0ba;
+    --chalk:#3d2b1a;
+    --chalk-dim:#8a7360;
+    --amber:#e08b2e;
+    --amber-dark:#c8752a;
+    --red:#c0392b;
+    --red-dark:#a52f22;
+    --green:#4caf7d;
+    --green-dark:#37905f;
+    --gray:#6e5c50;
+    --panel:#ffffff;
+    --line:#e8d6ab;
+  }
+  *{box-sizing:border-box;}
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    font-family:'Noto Sans Kannada','Baloo 2',sans-serif;
+    background:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.4), transparent 40%),
+      var(--board);
+    color:var(--chalk);
+    min-height:100vh;
+    padding-bottom:calc(60px + env(safe-area-inset-bottom));
+    overscroll-behavior-y:contain;
+    -webkit-tap-highlight-color:transparent;
+  }
+  header{
+    padding:calc(22px + env(safe-area-inset-top)) 24px 16px;
+    border-bottom:3px dashed var(--line);
+    background:var(--board);
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  header h1{
+    font-family:'Baloo 2',sans-serif;
+    font-size:26px;
+    margin:0;
+    letter-spacing:0.5px;
+    color:var(--amber);
+    font-weight:700;
+  }
+  header .sub{color:var(--chalk-dim);font-size:13px;}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px;}
+  .card{
+    background:var(--panel);
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:18px;
+    box-shadow:0 4px 14px rgba(120,90,40,0.08);
+  }
+  .card h2{
+    margin:0 0 12px;
+    font-size:16px;
+    color:var(--amber-dark);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  button{
+    font-family:inherit;
+    cursor:pointer;
+    border:none;
+    border-radius:9px;
+    padding:9px 16px;
+    font-size:14px;
+    font-weight:600;
+    transition:transform .08s ease, filter .12s ease;
+  }
+  button:active{transform:scale(0.96);}
+  .btn-amber{background:var(--amber);color:#fff;}
+  .btn-amber:hover{filter:brightness(1.08);}
+  .btn-outline{background:transparent;border:1.5px solid var(--amber);color:var(--amber-dark);}
+  .btn-outline:hover{background:rgba(224,139,46,0.12);}
+  .btn-ghost{background:#f2e4c3;color:var(--chalk);}
+  .btn-ghost:hover{background:#ecdcb5;}
+  .btn-danger{background:var(--red);color:#fff;}
+  input[type=text], input[type=search], select{
+    font-family:inherit;
+    background:#fff;
+    border:1.5px solid var(--line);
+    color:var(--chalk);
+    padding:9px 12px;
+    border-radius:9px;
+    font-size:14px;
+  }
+  input::placeholder{color:var(--chalk-dim);}
+  .class-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .class-tab{
+    padding:8px 14px;border-radius:20px;background:var(--gray);
+    border:1.5px solid var(--gray);color:#fff;font-weight:600;font-size:13px;
+  }
+  .class-tab.active{background:var(--amber);color:#fff;border-color:var(--amber);}
+  .student-list{display:flex;flex-wrap:wrap;gap:8px;max-height:220px;overflow-y:auto;padding:4px 2px;}
+  .student-chip{
+    display:flex;align-items:center;gap:8px;
+    background:#f2e4c3;border:1.5px solid var(--line);
+    border-radius:10px;padding:7px 10px;font-size:13.5px;cursor:pointer;
+  }
+  .student-chip.active{border-color:var(--green);background:rgba(76,175,125,0.18);}
+  .student-chip .cls-badge{font-size:11px;color:var(--chalk-dim);background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:6px;}
+  .student-chip .del{color:var(--red);font-weight:800;margin-left:4px;padding:0 3px;}
+  .empty-note{color:var(--chalk-dim);font-size:13px;padding:8px 0;}
+  .active-bar{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#fdf6e6;border-radius:10px;padding:12px 16px;margin-bottom:16px;
+    border-left:4px solid var(--amber);
+  }
+  .active-bar .name{font-weight:800;font-size:17px;color:var(--amber-dark);}
+  .tabbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .tabbar button{background:#f2e4c3;color:var(--chalk-dim);border:1.5px solid var(--line);}
+  .tabbar button.active{background:var(--green);color:#fff;border-color:var(--green);}
+  .range-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .range-btn{background:#f2e4c3;color:var(--chalk-dim);border:1.5px solid var(--line);font-size:13px;padding:7px 12px;}
+  .range-btn.active{background:var(--amber);color:#fff;border-color:var(--amber);}
+  .num-grid{display:grid;grid-template-columns:repeat(14, 1fr);gap:4px;}
+  .num-tile{
+    aspect-ratio:1;border-radius:6px;font-weight:800;font-size:17px;
+    background:var(--red);color:#fff;border:none;padding:0;
+  }
+  .num-tile.green{background:var(--green);color:#fff;}
+  .table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px;margin-bottom:16px;}
+  .tbl-tile{padding:14px 4px;border-radius:10px;font-weight:800;font-size:14.5px;background:var(--gray);color:#fff;}
+  .tbl-tile.known{background:var(--green);color:#fff;}
+  .tbl-tile.unknown{background:var(--red);color:#fff;}
+  .tbl-tile.sel{outline:3px solid var(--amber-dark);outline-offset:2px;}
+  .mgi-detail{
+    background:#fdf6e6;border:1.5px solid var(--amber);border-radius:12px;
+    padding:16px;margin-bottom:16px;
+  }
+  .mgi-detail h3{margin:0 0 10px;color:var(--amber-dark);font-size:16px;}
+  .mgi-rows{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;
+  }
+  .mgi-row{
+    background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:8px 10px;font-weight:700;font-size:15px;text-align:center;
+    color:var(--chalk);
+  }
+  .mgi-tile{font-family:inherit;transition:background .15s ease, color .15s ease;}
+  .mgi-tile.green{background:var(--green);border-color:var(--green-dark);color:#fff;}
+  .miss-box{
+    background:#fdf6e6;border:1.5px dashed var(--red);border-radius:10px;padding:14px;
+  }
+  .miss-box h3{margin:0 0 8px;font-size:14px;color:var(--red);}
+  .miss-chip{
+    display:inline-flex;align-items:center;gap:6px;background:rgba(192,57,43,0.10);
+    border:1px solid var(--red);color:var(--chalk);padding:5px 10px;border-radius:8px;
+    font-size:13px;margin:3px;
+  }
+  .miss-chip .x{cursor:pointer;color:var(--red);font-weight:800;}
+  .op-panel{text-align:center;padding:10px 0 4px;}
+  .problem{
+    font-family:'Baloo 2',sans-serif;font-size:38px;font-weight:700;color:var(--chalk);
+    background:#fdf6e6;border-radius:14px;padding:26px 10px;margin-bottom:18px;
+    letter-spacing:1px;
+  }
+  .level-tag{color:var(--chalk-dim);font-size:12.5px;margin-bottom:14px;}
+  .judge-row{display:flex;gap:14px;justify-content:center;margin-bottom:20px;}
+  .judge-row button{padding:12px 28px;font-size:15px;}
+  .placeholder{color:var(--chalk-dim);text-align:center;padding:30px 0;font-size:14px;}
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(60,40,20,0.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;
+  }
+  .modal{
+    background:#fff;border:2px solid var(--line);border-radius:14px;padding:22px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;
+  }
+  .modal h3{margin-top:0;color:var(--amber-dark);}
+  .name-line{display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid var(--line);font-size:14px;color:var(--chalk);}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--green);color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;
+    box-shadow:0 4px 14px rgba(0,0,0,0.2);z-index:60;font-size:14px;
+  }
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+  @media (max-width:520px){
+    .num-grid{grid-template-columns:repeat(8, 1fr);}
+    .num-tile{font-size:15px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>✏️ ಗಣಿತ ಟ್ರ್ಯಾಕರ್</h1>
+  <div class="sub">ಪ್ರತಿ ಮಗುವಿನ ಸಂಖ್ಯೆ, ಮಗ್ಗಿ ಮತ್ತು ಲೆಕ್ಕದ ಪ್ರಗತಿ ಪತ್ತೆ ಹಚ್ಚಿ</div>
+</header>
+
+<div class="wrap">
+
+  <div class="card" id="studentCard">
+    <h2>👥 ವಿದ್ಯಾರ್ಥಿಗಳು</h2>
+    <div class="row" style="margin-bottom:14px;">
+      <button class="btn-amber" id="btnAddOne">➕ ಒಬ್ಬೊಬ್ಬರನ್ನಾಗಿ ಸೇರಿಸಿ</button>
+      <button class="btn-outline" id="btnExcel">📊 ಎಕ್ಸೆಲ್ ಮೂಲಕ ಅಪಲೋಡ್</button>
+      <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" style="display:none;">
+      <input type="search" id="searchBox" placeholder="🔍 ಹೆಸರು ಹುಡುಕಿ..." style="min-width:220px;flex:1;">
+      <button class="btn-danger" id="btnClearAll">🗑️ ಎಲ್ಲಾ ವಿದ್ಯಾರ್ಥಿಗಳನ್ನು ಅಳಿಸಿ</button>
+    </div>
+    <div class="class-tabs" id="classTabs"></div>
+    <div class="row" style="margin-bottom:10px;">
+      <select id="studentDropdown" style="min-width:240px;flex:1;"></select>
+      <button class="btn-danger" id="btnDeleteSelected">✕ ಆಯ್ಕೆಮಾಡಿದ ವಿದ್ಯಾರ್ಥಿಯನ್ನು ಅಳಿಸಿ</button>
+    </div>
+  </div>
+
+  <div class="card" id="trackCard" style="display:none;">
+    <div class="active-bar" id="activeBar"></div>
+    <div class="tabbar" id="tabbar">
+      <button data-tab="numbers" class="active">🔢 ಸಂಖ್ಯೆಗಳು</button>
+      <button data-tab="tables">✖️ ಮಗ್ಗಿಗಳು</button>
+      <button data-tab="add">➕ ಕೂಡಿಸುವಿಕೆ</button>
+      <button data-tab="sub">➖ ಕಳೆಯುವಿಕೆ</button>
+      <button data-tab="mul">✳️ ಗುಣಾಕಾರ</button>
+      <button data-tab="div">➗ ಭಾಗಾಕಾರ</button>
+    </div>
+    <div id="tabContent"></div>
+  </div>
+
+  <div class="card placeholder" id="noStudentCard">
+    ಮೇಲಿನ ಡ್ರಾಪ್‌ಡೌನ್‌ನಿಂದ ಒಬ್ಬ ವಿದ್ಯಾರ್ಥಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ, ನಂತರ ಸಂಖ್ಯೆ / ಮಗ್ಗಿ / ಲೆಕ್ಕಗಳ ಪ್ರಗತಿ ದಾಖಲಿಸಬಹುದು.
+  </div>
+
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* ---------------- STATE ---------------- */
+let students = [];            // {id, name, cls}
+let progressCache = {};       // id -> progress object
+let activeClassTab = 'all';
+let activeStudentId = null;
+let activeTrackTab = 'numbers';
+let activeNumRange = 0;       // index 0..9
+let currentProblem = {add:null, sub:null, mul:null, div:null};
+let excelExtracted = [];
+
+const CLASSES = [1,2,3,4,5,6,7];
+const OP_LABELS = {add:'ಕೂಡಿಸುವಿಕೆ', sub:'ಕಳೆಯುವಿಕೆ', mul:'ಗುಣಾಕಾರ', div:'ಭಾಗಾಕಾರ'};
+const OP_SYMBOL = {add:'+', sub:'−', mul:'×', div:'÷'};
+
+// Starting roster (GHPKBS KUSUGAL, 2026-2027) — used only the very first time
+// the app runs, when no student list has been saved yet.
+const DEFAULT_STUDENTS = [
+  {id:'seed_001', name:'ABHUBAKAR MAHMADSAB HOMBAL', cls:1},
+  {id:'seed_002', name:'ADESHA RAMESH HALAGI', cls:1},
+  {id:'seed_003', name:'ARHAN RAIMANSAB KAVALIKAI', cls:1},
+  {id:'seed_004', name:'ARUN GURUNATHA CHIGADOLLI', cls:1},
+  {id:'seed_005', name:'ARYAGOUDA SADANANDGOUDA SHIVALLI', cls:1},
+  {id:'seed_006', name:'AZAAD MABUSAB PINJAR', cls:1},
+  {id:'seed_007', name:'AZANA GAUSUSAB DAMBAL', cls:1},
+  {id:'seed_008', name:'BASURAJ RAMESH KHANANNAVAR', cls:1},
+  {id:'seed_009', name:'FAKKIRAGOUDA BASANAGOUDA KENCHANAGOUDRA', cls:1},
+  {id:'seed_010', name:'FARAHAN MODINSAB MIRJANNAVAR', cls:1},
+  {id:'seed_011', name:'MAHEER IBRAHIMSAB JIDDIMANI', cls:1},
+  {id:'seed_012', name:'MALIK REHAN HAJARESAB DAMBAL', cls:1},
+  {id:'seed_013', name:'MANIKANTH MAHANTESH CHALLANAVAR', cls:1},
+  {id:'seed_014', name:'MUZAMMIL MABUSAB SHIRAHATTI', cls:1},
+  {id:'seed_015', name:'NIYAJA MOULASAB MATTIGATTI', cls:1},
+  {id:'seed_016', name:'PAVAN KUMAR MANJUNATH KYARAKOPPA', cls:1},
+  {id:'seed_017', name:'PRAKASH NAGAPPA KARLAGERI', cls:1},
+  {id:'seed_018', name:'PRATHAPA SHRINIVAS KOTABAGI', cls:1},
+  {id:'seed_019', name:'SAMARTH BASAVARAJ KADIYAVAR', cls:1},
+  {id:'seed_020', name:'SATWIK BASAPPA RAKKASAGI', cls:1},
+  {id:'seed_021', name:'SHANAWAJ HUSENSAB DAMBAL', cls:1},
+  {id:'seed_022', name:'SIDDARTH PANCHAKSHARAYYA HIREMATH', cls:1},
+  {id:'seed_023', name:'TEJAS MAHESH BAJI', cls:1},
+  {id:'seed_024', name:'VASANT R KURUBAGERI', cls:1},
+  {id:'seed_025', name:'VIKASGOUDA H KADAPATTI', cls:1},
+  {id:'seed_026', name:'VINAYAK IRAPPA GANIGER', cls:1},
+  {id:'seed_027', name:'AARYAN MARUTI HALAGI', cls:2},
+  {id:'seed_028', name:'ABHISHEK HANUMANTAPPA ANADAD', cls:2},
+  {id:'seed_029', name:'BASAVARAJ MANJUNATH ENAGI', cls:2},
+  {id:'seed_030', name:'BHARATH SHIDRAMAPPA CHIGADOLLI', cls:2},
+  {id:'seed_031', name:'CHETAN NINGAPPA SHERI', cls:2},
+  {id:'seed_032', name:'FARHAN MAHAMMADGOUS KOLKAR', cls:2},
+  {id:'seed_033', name:'GURUORASAD MALLIKARJUN BIDARANNAVAR', cls:2},
+  {id:'seed_034', name:'HASANASAB RIYAZAHMAD NADAF', cls:2},
+  {id:'seed_035', name:'HASANSAB ISMANSAB PATHAN', cls:2},
+  {id:'seed_036', name:'MAHAMMADAYASEEN AKBARASAB NAIKAR', cls:2},
+  {id:'seed_037', name:'MAHESH G KARJAGI', cls:2},
+  {id:'seed_038', name:'MANOJ MANJUNATH DODDAMANI', cls:2},
+  {id:'seed_039', name:'MEERASAB RAJAKASAB NALAWADI', cls:2},
+  {id:'seed_040', name:'MOHAMMEDSUFIYAN MAKTUMSAB SAYED', cls:2},
+  {id:'seed_041', name:'NITESH MANJUNATH BHANGI', cls:2},
+  {id:'seed_042', name:'PRASHANT BSAVARAJ SULLAD', cls:2},
+  {id:'seed_043', name:'RIHAL RAJESAB RAJOR', cls:2},
+  {id:'seed_044', name:'SATVIK VIJAY HADAPAD', cls:2},
+  {id:'seed_045', name:'SHAHABAZALAM BHASHASAB SUNKAD', cls:2},
+  {id:'seed_046', name:'SHANKAR KALLAPPA MARADAGI', cls:2},
+  {id:'seed_047', name:'SHIVARAJ GURUNATH GAMANGATTI', cls:2},
+  {id:'seed_048', name:'SHREYAS SHIVANAND ITI', cls:2},
+  {id:'seed_049', name:'SIDDARTH GIRISH BALEHOSUR', cls:2},
+  {id:'seed_050', name:'SRUJAN KARLATTI', cls:2},
+  {id:'seed_051', name:'TANVIR R KAVALIKAI', cls:2},
+  {id:'seed_052', name:'TARUN HANUMANTAPPA HADAPAD', cls:2},
+  {id:'seed_053', name:'TEJAS BHIMAPPA BARKER', cls:2},
+  {id:'seed_054', name:'VIJAY VEERESH HALAKATTIMATH', cls:2},
+  {id:'seed_055', name:'VIRAJ NAGARAJ KURUGUND', cls:2},
+  {id:'seed_056', name:'AKASH IRAPPA SUNAGAR', cls:3},
+  {id:'seed_057', name:'ARAMAN GOUSUSAB DAMBAL', cls:3},
+  {id:'seed_058', name:'ATIFKHAN ARIFKHAN RAHIMKHANAVAR', cls:3},
+  {id:'seed_059', name:'AYAN HYDARALI BAPUNAVAR', cls:3},
+  {id:'seed_060', name:'BASAVARAJ SHIDRAMAPPA CHIGADOLLI', cls:3},
+  {id:'seed_061', name:'CHETAN MANJUNATH KAMBALI', cls:3},
+  {id:'seed_062', name:'CHETAN SHIVANAND BADIGER', cls:3},
+  {id:'seed_063', name:'DRUVANTA TAMMAPPA BANNIKOPPA', cls:3},
+  {id:'seed_064', name:'FAYAZ KALANDARBHASHA MELLAGATTI', cls:3},
+  {id:'seed_065', name:'GOUTAM KRISHNA UPPAR', cls:3},
+  {id:'seed_066', name:'GOUTAM MOUNESH BADIGER', cls:3},
+  {id:'seed_067', name:'GURUNATH RAJESH KURUBAGERI', cls:3},
+  {id:'seed_068', name:'HANAMANTAPPA MANJUNATH SHIRAGERI', cls:3},
+  {id:'seed_069', name:'KALMESH YALLAPPA BHANGI', cls:3},
+  {id:'seed_070', name:'KARTIK VEERANNA CHANNOJI', cls:3},
+  {id:'seed_071', name:'KARTIK NAGARAJ SHIRAGERI', cls:3},
+  {id:'seed_072', name:'KIRAN GURUNATH CHIGADOLLI', cls:3},
+  {id:'seed_073', name:'MALIKRIYAN IMTIYAZ SALAGAR', cls:3},
+  {id:'seed_074', name:'MAMMADFARAN MOULASAB KAVALIKAI', cls:3},
+  {id:'seed_075', name:'MAMMEDALI MAKTUMSAB HEBASUR', cls:3},
+  {id:'seed_076', name:'MANIKANTH BASAVARAJ RONAD', cls:3},
+  {id:'seed_077', name:'MANISH NINGAPPA BANDIWAD', cls:3},
+  {id:'seed_078', name:'MOHAMMADAYAN MAHAMMADGOUSE KOLKAR', cls:3},
+  {id:'seed_079', name:'NASIR MOULASAB MATTIGATTI', cls:3},
+  {id:'seed_080', name:'NAVEEN IRAPPA HADAPAD', cls:3},
+  {id:'seed_081', name:'NIKHIL NAGARAJ KURAGUND', cls:3},
+  {id:'seed_082', name:'PRAVEEN BASAVARAJ ANADAD', cls:3},
+  {id:'seed_083', name:'RAHUL TULASIGERI SUNAGAR', cls:3},
+  {id:'seed_084', name:'ROHITGOUDA BASANAGOUDA ALAGAWADI', cls:3},
+  {id:'seed_085', name:'SAJID LADASAB NADAF', cls:3},
+  {id:'seed_086', name:'SALMANKHAN MAKTUMJANI RAHIMKHANAVAR', cls:3},
+  {id:'seed_087', name:'SAMARTH CHANDRAPPA DHALAYATAR', cls:3},
+  {id:'seed_088', name:'SAMARTH MANJUNATH HUGAR', cls:3},
+  {id:'seed_089', name:'SAMEER MABUSUBANI BAHADURKHAN', cls:3},
+  {id:'seed_090', name:'SANDARSH SHASHIKUMAR RONAD', cls:3},
+  {id:'seed_091', name:'SHANKAR GURUSIDDAPPA TOTAD', cls:3},
+  {id:'seed_092', name:'SHEKHU BHARAMAPPA NALAVAL', cls:3},
+  {id:'seed_093', name:'SULTANALI MAKTUMSAB SHEKHASANADI', cls:3},
+  {id:'seed_094', name:'SUMANTH SHIVANAND HADAPAD', cls:3},
+  {id:'seed_095', name:'TANVEER DAVALSAB MIRJANAVAR', cls:3},
+  {id:'seed_096', name:'VINAYAK MANJUNATH GEDI', cls:3},
+  {id:'seed_097', name:'VISHAL RAMESH BAJI', cls:3},
+  {id:'seed_098', name:'YALLAPPA SOMALINGAPPA KURI', cls:3},
+  {id:'seed_099', name:'YASHAVANTH HANAMANTAPPA HULAGANNAVAR', cls:3},
+  {id:'seed_100', name:'YASHAVANTH LAXMAN DEVANNAVAR', cls:3},
+  {id:'seed_101', name:'YOGESH BASAVARAJ TUKKANNAVAR', cls:3},
+  {id:'seed_102', name:'YUVARAJ SIDDHARUDH KURAGUND', cls:3},
+  {id:'seed_103', name:'ACHINTYA MUDAKAPPA HADAPAD', cls:4},
+  {id:'seed_104', name:'AKASH MANJUNATH BHANGI', cls:4},
+  {id:'seed_105', name:'ARAMANKHAN ALTAFKHAN RAHIMAKHANAVAR', cls:4},
+  {id:'seed_106', name:'ARFAN IMAMHUSEN NADAF', cls:4},
+  {id:'seed_107', name:'BASAVARAJ SIDDAPPA NEERALAGI', cls:4},
+  {id:'seed_108', name:'BASAVARAJ SURESH BADNIKAYI', cls:4},
+  {id:'seed_109', name:'BHUVAN SIDDARAMAYYA HIREMATH', cls:4},
+  {id:'seed_110', name:'CHANDAN CHANDRASHEKHAR MARABAD', cls:4},
+  {id:'seed_111', name:'CHINMAY GURUBASAYYA KANTEMMANAVAR', cls:4},
+  {id:'seed_112', name:'FAKKEERSAB MABUSAB NADAF', cls:4},
+  {id:'seed_113', name:'HANUMANTAPPA PRAKASH CHIGADOLLI', cls:4},
+  {id:'seed_114', name:'IRAYYA BASAYYA KANTEMMANAVAR', cls:4},
+  {id:'seed_115', name:'MADESH RAMESH HALAGI', cls:4},
+  {id:'seed_116', name:'MAHABUBASAB MAKTUMSAB HUBBALLI', cls:4},
+  {id:'seed_117', name:'MAHADEVAPPA IRAPPA GANIGER', cls:4},
+  {id:'seed_118', name:'MAHAMMAD ARAMAN SHAFY MULLA', cls:4},
+  {id:'seed_119', name:'MAHMADGOUS SALEEM MANIYAR', cls:4},
+  {id:'seed_120', name:'MALLIKARJUN HANUMANTAPPA BELAGALI', cls:4},
+  {id:'seed_121', name:'MANOJ NINGAPPA BANDIWAD', cls:4},
+  {id:'seed_122', name:'MANTESH RAMAPPA KUMBAR', cls:4},
+  {id:'seed_123', name:'NIRANJANAGOUDA RAJU BYALYAL', cls:4},
+  {id:'seed_124', name:'NIYAJ MALANGASAB KALADAGI', cls:4},
+  {id:'seed_125', name:'PREETAM GADIGEPPA MUNAVALLI', cls:4},
+  {id:'seed_126', name:'RISHIT GANESH NAVALUR', cls:4},
+  {id:'seed_127', name:'SAMARTH MANJUNATH HANCHINAMANI', cls:4},
+  {id:'seed_128', name:'SANDEEP ALLAMAPRABHU TUKKANNAVAR', cls:4},
+  {id:'seed_129', name:'SANJAYKUMAR HANAMANTAPPA NAIKAR', cls:4},
+  {id:'seed_130', name:'SANTOSH RAMESH UPPAR', cls:4},
+  {id:'seed_131', name:'SATVIK MAHANTESH HALAGI', cls:4},
+  {id:'seed_132', name:'SHARIF GURUSIDDAPPA HALAGI', cls:4},
+  {id:'seed_133', name:'SIDDARTH KARIYAPPA KAMBALI', cls:4},
+  {id:'seed_134', name:'SOHILKHAN HUSENKHAN RAHIMAKHANAVAR', cls:4},
+  {id:'seed_135', name:'VIJAY IRAPPA GANIGER', cls:4},
+  {id:'seed_136', name:'VINAYAK YALLAPPA MUNDARAGI', cls:4},
+  {id:'seed_137', name:'VISHWANATH GANGADHAR NOOLVI', cls:4},
+  {id:'seed_138', name:'VIVEK CHANNAPPA BAJI', cls:4},
+  {id:'seed_139', name:'ABHISHEK MALLIKARJUN SAVADATTI', cls:5},
+  {id:'seed_140', name:'ABIDKHAN ARIFKHAN RAHIMKHANAVAR', cls:5},
+  {id:'seed_141', name:'ABZAL MABUSAB KAVALIKAI', cls:5},
+  {id:'seed_142', name:'AJAY VEERESH HALAKATTIMATH', cls:5},
+  {id:'seed_143', name:'AKTAR RAJA IMAMSAB NARAGUND', cls:5},
+  {id:'seed_144', name:'ARABAJKHAN RAHAMANKHAN RAHIMKHANAVAR', cls:5},
+  {id:'seed_145', name:'ARIZALI MAKTUMSAB SHEKHASANADI', cls:5},
+  {id:'seed_146', name:'ATIQKHAN IMRANKHAN RAHIMKHANAVAR', cls:5},
+  {id:'seed_147', name:'BASAVARAJ CHANDRAPPA KURTAKOTI', cls:5},
+  {id:'seed_148', name:'BASAVARAJ GURUNATH KAMMAR', cls:5},
+  {id:'seed_149', name:'BASAVARAJ MANJUNATH CHIGADOLLI', cls:5},
+  {id:'seed_150', name:'BASAVARAJ NINGAPPA MADIWALAR', cls:5},
+  {id:'seed_151', name:'DEEPAK NURANDAPPA BANNIKOPPA', cls:5},
+  {id:'seed_152', name:'DEVARAJ MUTTAPPA DOLLI', cls:5},
+  {id:'seed_153', name:'GIRISH SUBHAS BAJI', cls:5},
+  {id:'seed_154', name:'HAIDARALI DAVALASAB GUDAGI', cls:5},
+  {id:'seed_155', name:'HEMANTHKUMAR N NARAGUND', cls:5},
+  {id:'seed_156', name:'IMRAN MABUSAB ATTAR', cls:5},
+  {id:'seed_157', name:'IMRAN MAHABOOBSAB MIRJANAVAR', cls:5},
+  {id:'seed_158', name:'JUBER MAHMAD SALEEM MANIYAR', cls:5},
+  {id:'seed_159', name:'KHALANDAR RIYAZAHMAD SUNKAD', cls:5},
+  {id:'seed_160', name:'MAHAMMADRAIHAN MAHAMMADRAFIK KOPPAL', cls:5},
+  {id:'seed_161', name:'MAHANTESH BASAPPA SULLAD', cls:5},
+  {id:'seed_162', name:'MAHMAD YASEEN MABUSAB PINJAR', cls:5},
+  {id:'seed_163', name:'MALAKAJI SOMALINGAPPA KURI', cls:5},
+  {id:'seed_164', name:'MAMMADASHRAF REHAMANSAB DAMBAL', cls:5},
+  {id:'seed_165', name:'MAMMADNAVEED YATTIMASAB KAVALIKAI', cls:5},
+  {id:'seed_166', name:'MANI SHIVAPPA KADIYAVAR', cls:5},
+  {id:'seed_167', name:'MAZAHMAD MAHMADYUSUF BANGADAVAR', cls:5},
+  {id:'seed_168', name:'MOHIDDIN MAHMADSAB SAIYYAD', cls:5},
+  {id:'seed_169', name:'MOHMED ATEEF KHAMARUDDIN HUBBALLI', cls:5},
+  {id:'seed_170', name:'MUBARAK MOULASAB BAHADDURKHAN', cls:5},
+  {id:'seed_171', name:'MUSTAFA MAKTUMJANI RAHIMAKHANAVAR', cls:5},
+  {id:'seed_172', name:'MUTTU MANJUNATH HUGAR', cls:5},
+  {id:'seed_173', name:'PRADEEPAGOUDA MALLIKARJUNAGOUDA KENCHANAGOUDRA', cls:5},
+  {id:'seed_174', name:'PRAJWAL ASHOK KAMBALI', cls:5},
+  {id:'seed_175', name:'PREETAM KALLAPPA HALAGI', cls:5},
+  {id:'seed_176', name:'PRUTHVIRAJ IRAPPA SHYAGOTI', cls:5},
+  {id:'seed_177', name:'RANJIT MANJUNATH DODDAMANI', cls:5},
+  {id:'seed_178', name:'RIJAVAN RAIMANASAB DAMBAL', cls:5},
+  {id:'seed_179', name:'SACHIT RAVIKIRAN HOSAMANI', cls:5},
+  {id:'seed_180', name:'SADIQ ASAMMANAVAR', cls:5},
+  {id:'seed_181', name:'SAMAD HASANSAB DAMBAL', cls:5},
+  {id:'seed_182', name:'SAMARTH BASAPPA CHATRI', cls:5},
+  {id:'seed_183', name:'SAMARTH IRAPPA HADAPAD', cls:5},
+  {id:'seed_184', name:'SAMARTH KOTRESH BADNIKAYI', cls:5},
+  {id:'seed_185', name:'SHANTAVEERAYYA PANCHAKSHARAYYA HIREMATH', cls:5},
+  {id:'seed_186', name:'SHIVAKUMAR NAGABHUSHAN GADDIMATH', cls:5},
+  {id:'seed_187', name:'SHIVANAND CHARAMURTI KALI', cls:5},
+  {id:'seed_188', name:'SHIVU MALLESHI TUKKANNAVAR', cls:5},
+  {id:'seed_189', name:'SIDDU MANJUNATH ENAGI', cls:5},
+  {id:'seed_190', name:'SURAJ GURUSIDDAPPA BHANGI', cls:5},
+  {id:'seed_191', name:'TAHEER REHAMANSAB KAVALIKAI', cls:5},
+  {id:'seed_192', name:'TANVEERAHMADKHAN DASTAGIRKHAN RAHIMAKHANAVAR', cls:5},
+  {id:'seed_193', name:'VIKAS MANJUNATH BHANGI', cls:5},
+  {id:'seed_194', name:'ABHAY SUBHAS BAJI', cls:6},
+  {id:'seed_195', name:'AFANAN MAHMADARAFIK DUKANADAR', cls:6},
+  {id:'seed_196', name:'AKSHAY HANAMANTAPPA HADLIGI', cls:6},
+  {id:'seed_197', name:'AMEERAHMAD ABDULGAFAR NADAF', cls:6},
+  {id:'seed_198', name:'AMIRKHAN ALTAFKHAN RAHIMKHANAVAR', cls:6},
+  {id:'seed_199', name:'ANAND SHIVANAND BYAHATTI', cls:6},
+  {id:'seed_200', name:'ANIL MOUNESH BADIGER', cls:6},
+  {id:'seed_201', name:'ASHPAKALI SHARIFSAB SUNKAD', cls:6},
+  {id:'seed_202', name:'ATIK AHMAD MAHMADSAB HUBBALLI', cls:6},
+  {id:'seed_203', name:'AYAN MALIKSAB GUDAGI', cls:6},
+  {id:'seed_204', name:'CHANDRU GAVISIDDAPPA KARJAGI', cls:6},
+  {id:'seed_205', name:'DAULMALLIK MAHMADSAB SAIYYAD', cls:6},
+  {id:'seed_206', name:'DHANUSH SRINIVAS KOTABAGI', cls:6},
+  {id:'seed_207', name:'DHANUSH TAMMAPPA BANNIKOPPA', cls:6},
+  {id:'seed_208', name:'DURAGAPPA SHIVAPPA HALAGI', cls:6},
+  {id:'seed_209', name:'FAYAZ RAJAKSAB NALAVADI', cls:6},
+  {id:'seed_210', name:'GURUSHIDDAPPA BASAPPA TUKKANNAVAR', cls:6},
+  {id:'seed_211', name:'IRESH KALLAPPA MADIVALAR', cls:6},
+  {id:'seed_212', name:'ISMAILSAB RIYAZAHMMAD NADAF', cls:6},
+  {id:'seed_213', name:'JAKEER BHASHASAB RAAJUBAI', cls:6},
+  {id:'seed_214', name:'KHADARSAB HAJARESAB DAMBAL', cls:6},
+  {id:'seed_215', name:'KHAJESAB REHAMANSAB GADAGOLI', cls:6},
+  {id:'seed_216', name:'KIRANAGOUD BASANAGOUD KENCHANAGOUDRA', cls:6},
+  {id:'seed_217', name:'MAHABUBSAB RAHIMANSAB DAMBAL', cls:6},
+  {id:'seed_218', name:'MAHAMMAD DANIF GOUSUSAB DAMBAL', cls:6},
+  {id:'seed_219', name:'MAHAMMADIMRAN RASTUMSAB VEERAPUR', cls:6},
+  {id:'seed_220', name:'MAHMAD JAHID MABUSAB TADASAD', cls:6},
+  {id:'seed_221', name:'MAHMADMUSTAFA MAKTUMSAB HUBBALLI', cls:6},
+  {id:'seed_222', name:'MAKATUMMASAB SAIDUSAB PEERAKAN', cls:6},
+  {id:'seed_223', name:'MAKTUMHUSENI RIYAJAHMMAD NADAF', cls:6},
+  {id:'seed_224', name:'MALAKAJIGOUDA BASANAGOUDA HITTALAMANI', cls:6},
+  {id:'seed_225', name:'MALATHESH BASAVARAJ TAHASHILDAR', cls:6},
+  {id:'seed_226', name:'MALIK RIHAN MAHAMAD SHAFI MULLA', cls:6},
+  {id:'seed_227', name:'MALLIK RIYAN MAKTUMSAB KALAWAD', cls:6},
+  {id:'seed_228', name:'MANOJ DURGAPPA HALAGI', cls:6},
+  {id:'seed_229', name:'MANOJ LAKSHMAN BARAKER', cls:6},
+  {id:'seed_230', name:'MANTESH NINGAPPA BANDIWAD', cls:6},
+  {id:'seed_231', name:'MOHAMMAD ANSAR IMAM HUSEN NADAF', cls:6},
+  {id:'seed_232', name:'MOHAMMAD AYAN SIKANDAR ALI GULAGUNDI', cls:6},
+  {id:'seed_233', name:'MOHAMMADRIJWAN ABDULRAIMAN GULAGUNDI', cls:6},
+  {id:'seed_234', name:'MUBARAK IMTIYAZ SHALAGAR', cls:6},
+  {id:'seed_235', name:'MUBARAK RAJESAB MALLADAD', cls:6},
+  {id:'seed_236', name:'NAGANGOUDA MANJUNATH KENCHANGOUDRA', cls:6},
+  {id:'seed_237', name:'NAGARAJ BHIMAPPA KUMBAR', cls:6},
+  {id:'seed_238', name:'NASIR RAIMANSAB PATAVEGAR', cls:6},
+  {id:'seed_239', name:'PRADEEP SADANAND DEVANNAVAR', cls:6},
+  {id:'seed_240', name:'PRAKASH FAKKIRAPPA KURUBAGERI', cls:6},
+  {id:'seed_241', name:'RAJESAB SHARIFSAB MIRJANAVAR', cls:6},
+  {id:'seed_242', name:'SAMEERAHMAD ABDULGAFAR NADAF', cls:6},
+  {id:'seed_243', name:'SANDEEPGOUDA MANJUNATHGOUDA KENCHANAGOUDRA', cls:6},
+  {id:'seed_244', name:'SARVESHWARA UMESH NARAGUND', cls:6},
+  {id:'seed_245', name:'SHAMEERKHAN HUSENKHAN RAHEEMKHANAVAR', cls:6},
+  {id:'seed_246', name:'SHARATH KALMESH MARADDI', cls:6},
+  {id:'seed_247', name:'SHIVANAND HANUMANTAPPA HULAGANNAVAR', cls:6},
+  {id:'seed_248', name:'SHREESHAIL VIRESH DIVATAR', cls:6},
+  {id:'seed_249', name:'SOHEL KHADARSAB DAMBAL', cls:6},
+  {id:'seed_250', name:'SUBRAMANYA MANJUNATH HALAGI', cls:6},
+  {id:'seed_251', name:'TANAVEERAHMAD BHASHASAB UPPINBETAGERI', cls:6},
+  {id:'seed_252', name:'UJER AHMAD SALEEM MANIYAR', cls:6},
+  {id:'seed_253', name:'VIJAY MANJUNATH YARAKAD', cls:6},
+  {id:'seed_254', name:'VIJAYAKUMAR IRAPPA BAJI', cls:6},
+  {id:'seed_255', name:'VINAY ALLAMAPRABHU TUKKANNAVAR', cls:6},
+  {id:'seed_256', name:'VINAY ASHOK BADIGER', cls:6},
+  {id:'seed_257', name:'VINAYAK HANAMANTAPPA ALLUR', cls:6},
+  {id:'seed_258', name:'VINAYAK SHIVAJI ACHALKAR', cls:6},
+  {id:'seed_259', name:'VIRESH BHARAMAPPA NALAWAL', cls:6},
+  {id:'seed_260', name:'ADIL HAIDARALI BAPUNAVAR', cls:7},
+  {id:'seed_261', name:'ADILSHA SHARIFSAB NADAF', cls:7},
+  {id:'seed_262', name:'ADITYA BASAPPA ANADAD', cls:7},
+  {id:'seed_263', name:'ADITYA MALLESHI TUKKANNAVAR', cls:7},
+  {id:'seed_264', name:'AJAY MALLIKARJUN SAVADATTI', cls:7},
+  {id:'seed_265', name:'AKASH KALLAPPA CHIGADOLLI', cls:7},
+  {id:'seed_266', name:'ANILGOUDA BASANAGOUDA PATIL', cls:7},
+  {id:'seed_267', name:'ARAHAN MAKTUMSAB SAYYAD', cls:7},
+  {id:'seed_268', name:'ARAMAN MAKTUMSAB SAYYAD', cls:7},
+  {id:'seed_269', name:'BASANAGOUDA SIDDANAGOUDA GOUDAPPAGOUDRA', cls:7},
+  {id:'seed_270', name:'BASAVARAJ VIRUPAXAPPA DEVANNAVAR', cls:7},
+  {id:'seed_271', name:'BHARATH NAGAPPA BARAKER', cls:7},
+  {id:'seed_272', name:'DAVALMALIK MOULASAB SUNKAD', cls:7},
+  {id:'seed_273', name:'DHANUSH CHANNAPPA BAJI', cls:7},
+  {id:'seed_274', name:'GOVINDAPPA BHIMAPPA BARAKER', cls:7},
+  {id:'seed_275', name:'KALMESH SIDDAPPA NEERALAGI', cls:7},
+  {id:'seed_276', name:'KARTIK MALLAPPA AVADI', cls:7},
+  {id:'seed_277', name:'MAHESH MUDAKAPPA ITI', cls:7},
+  {id:'seed_278', name:'MAHMAD AYAN MABUSAB MIRJANAVAR', cls:7},
+  {id:'seed_279', name:'MAHMAD ISAK MOULASAB ASHAMMANAVAR', cls:7},
+  {id:'seed_280', name:'MALLU HANUMANTAPPA MARIGANNAVAR', cls:7},
+  {id:'seed_281', name:'MANOJ BASAVARAJ BARAKER', cls:7},
+  {id:'seed_282', name:'MANOJ GURUSIDDAPPA BHANGI', cls:7},
+  {id:'seed_283', name:'MANOJ MARIYAPPA HALAGI', cls:7},
+  {id:'seed_284', name:'MEHABOOBSAB RAJESAB MALLADAD', cls:7},
+  {id:'seed_285', name:'MOHMAD SHAMEER KASIMSAB KALEBAYI', cls:7},
+  {id:'seed_286', name:'MUJEEB DASTAGIRSAB NAGARCHI', cls:7},
+  {id:'seed_287', name:'NAVEEN ASHOK SANKARADDI', cls:7},
+  {id:'seed_288', name:'PRATHAM CHANDRASHEKHAR MARABAD', cls:7},
+  {id:'seed_289', name:'RAIMANSAB MABUSAB NADAF', cls:7},
+  {id:'seed_290', name:'RAVI JAGADEESH BIDARANNAVAR', cls:7},
+  {id:'seed_291', name:'RIYAZSAB RAJESAB PATAVEGAR', cls:7},
+  {id:'seed_292', name:'RIZWAN MALIKSAB GUDAGI', cls:7},
+  {id:'seed_293', name:'SAIDUSAB MABUSAB MIRJANAVAR', cls:7},
+  {id:'seed_294', name:'SAMARTH BASAPPA RAKKASAGI', cls:7},
+  {id:'seed_295', name:'SAMARTH HANAMANTAPPA NAYAKAR', cls:7},
+  {id:'seed_296', name:'SAMARTH IRANNA KOLIWAD', cls:7},
+  {id:'seed_297', name:'SANKET SHRIDHAR PURAD', cls:7},
+  {id:'seed_298', name:'SHIVUKUMAR GURUSIDDAPPA BARAKER', cls:7},
+  {id:'seed_299', name:'SHOYAB HASANASAB DAMBAL', cls:7},
+  {id:'seed_300', name:'SHRINATH PARASAPPA DALAYATAR', cls:7},
+  {id:'seed_301', name:'SHRINIVASAGOUDA GURUSIDDAGOUDA PATIL', cls:7},
+  {id:'seed_302', name:'TOUFIQ MAKTUMHUSEN MULLA', cls:7},
+  {id:'seed_303', name:'VEERESH DYAMANNA TATTI', cls:7},
+  {id:'seed_304', name:'VINOD IRAPPA HADAPAD', cls:7},
+  {id:'seed_305', name:'VIRUPAKSHAGOUDA RAMANAGOUDA BYALIGOUDRA', cls:7},
+  {id:'seed_306', name:'VITHAL MARUTI HALAGI', cls:7},
+  {id:'seed_307', name:'YASHAVANT FAKKEERAPPA CHIGADOLLI', cls:7}
+];
+
+function emptyProgress(){
+  return { numbers:{}, tables:{}, wrong:{add:[],sub:[],mul:[],div:[]} };
+}
+
+/* ---------------- STORAGE ---------------- */
+// Uses window.storage when available (inside Claude.ai artifact panel).
+// Falls back to localStorage automatically when the file is opened directly
+// in a browser (double-clicked / downloaded), so saving still works there.
+const hasCloudStorage = !!(window.storage && typeof window.storage.get === 'function');
+
+async function storageGet(key){
+  if(hasCloudStorage){
+    try{
+      const r = await window.storage.get(key, false);
+      return r ? r.value : null;
+    }catch(e){ return null; }
+  }
+  try{ return localStorage.getItem('gt_'+key); }catch(e){ return null; }
+}
+async function storageSet(key, val){
+  if(hasCloudStorage){
+    try{ await window.storage.set(key, val, false); return true; }
+    catch(e){ console.error('cloud save failed', e); return false; }
+  }
+  try{ localStorage.setItem('gt_'+key, val); return true; }
+  catch(e){ console.error('local save failed', e); return false; }
+}
+
+async function loadStudents(){
+  try{
+    const v = await storageGet('students');
+    if(v){
+      students = JSON.parse(v);
+    } else {
+      // First run — no saved data yet, so start with the school's roster
+      // (GHPKBS KUSUGAL) instead of an empty list.
+      students = DEFAULT_STUDENTS.map(s=>({...s}));
+      await saveStudents();
+    }
+  }catch(e){ students = []; }
+}
+async function saveStudents(){
+  const ok = await storageSet('students', JSON.stringify(students));
+  if(!ok) toast('⚠️ ಸೇವ್ ಆಗಲಿಲ್ಲ, ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ');
+}
+async function loadProgress(id){
+  if(progressCache[id]) return progressCache[id];
+  try{
+    const v = await storageGet('progress_'+id);
+    progressCache[id] = v ? JSON.parse(v) : emptyProgress();
+  }catch(e){ progressCache[id] = emptyProgress(); }
+  return progressCache[id];
+}
+async function saveProgress(id){
+  const ok = await storageSet('progress_'+id, JSON.stringify(progressCache[id]));
+  if(!ok) toast('⚠️ ಸೇವ್ ಆಗಲಿಲ್ಲ, ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ');
+}
+
+/* ---------------- TOAST ---------------- */
+function toast(msg){
+  const el = document.createElement('div');
+  el.className='toast'; el.textContent=msg;
+  document.getElementById('toastRoot').appendChild(el);
+  setTimeout(()=>el.remove(), 2200);
+}
+
+/* ---------------- RENDER: CLASS TABS + STUDENT LIST ---------------- */
+function renderClassTabs(){
+  const box = document.getElementById('classTabs');
+  let html = `<div class="class-tab ${activeClassTab==='all'?'active':''}" data-cls="all">ಎಲ್ಲಾ</div>`;
+  CLASSES.forEach(c=>{
+    html += `<div class="class-tab ${activeClassTab===c?'active':''}" data-cls="${c}">${c} ನೇ ತರಗತಿ</div>`;
+  });
+  box.innerHTML = html;
+  box.querySelectorAll('.class-tab').forEach(el=>{
+    el.onclick = ()=>{ activeClassTab = el.dataset.cls==='all'?'all':Number(el.dataset.cls); renderStudentList(); };
+  });
+}
+
+function renderStudentList(){
+  const dropdown = document.getElementById('studentDropdown');
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  let list = students;
+  if(q){
+    list = students.filter(s=>s.name.toLowerCase().includes(q));
+  } else if(activeClassTab!=='all'){
+    list = students.filter(s=>s.cls===activeClassTab);
+  }
+
+  // populate the name dropdown from the filtered list — this is now the ONLY place names appear
+  const sortedForDropdown = [...list].sort((a,b)=>a.name.localeCompare(b.name,'kn'));
+  if(sortedForDropdown.length===0){
+    dropdown.innerHTML = `<option value="">ಯಾವ ವಿದ್ಯಾರ್ಥಿಗಳೂ ಇಲ್ಲ</option>`;
+  } else {
+    dropdown.innerHTML = `<option value="">👤 ಹೆಸರು ಆಯ್ಕೆಮಾಡಿ...</option>` +
+      sortedForDropdown.map(s=>`<option value="${s.id}" ${s.id===activeStudentId?'selected':''}>${escapeHtml(s.name)} — ${s.cls} ನೇ</option>`).join('');
+  }
+  dropdown.onchange = ()=>{
+    if(dropdown.value) selectStudent(dropdown.value);
+  };
+}
+
+document.getElementById('btnDeleteSelected').onclick = async ()=>{
+  if(!activeStudentId){ toast('⚠️ ಮೊದಲು ಒಬ್ಬ ವಿದ್ಯಾರ್ಥಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ'); return; }
+  const s = students.find(x=>x.id===activeStudentId);
+  if(s && confirm(`"${s.name}" ಅನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯುವುದೇ?`)){
+    students = students.filter(x=>x.id!==activeStudentId);
+    await saveStudents();
+    activeStudentId = null;
+    renderTrackArea();
+    renderStudentList();
+  }
+};
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+async function selectStudent(id){
+  activeStudentId = id;
+  selectedTable = null;
+  await loadProgress(id);
+  renderStudentList();
+  renderTrackArea();
+}
+
+/* ---------------- ADD STUDENT (ONE BY ONE) ---------------- */
+document.getElementById('btnAddOne').onclick = ()=>{
+  const modal = document.getElementById('modalRoot');
+  modal.innerHTML = `
+    <div class="modal-bg">
+      <div class="modal">
+        <h3>➕ ವಿದ್ಯಾರ್ಥಿಯನ್ನು ಸೇರಿಸಿ</h3>
+        <div class="row" style="margin-bottom:12px;">
+          <input type="text" id="newName" placeholder="ವಿದ್ಯಾರ್ಥಿಯ ಹೆಸರು" style="flex:1;min-width:200px;">
+          <select id="newCls">${CLASSES.map(c=>`<option value="${c}">${c} ನೇ ತರಗತಿ</option>`).join('')}</select>
+        </div>
+        <div class="row">
+          <button class="btn-amber" id="confirmAdd">ಸೇರಿಸಿ</button>
+          <button class="btn-ghost" id="cancelAdd">ರದ್ದು</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('cancelAdd').onclick = ()=> modal.innerHTML='';
+  document.getElementById('confirmAdd').onclick = async ()=>{
+    const name = document.getElementById('newName').value.trim();
+    const cls = Number(document.getElementById('newCls').value);
+    if(!name){ toast('ಹೆಸರು ನಮೂದಿಸಿ'); return; }
+    students.push({id:'s_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name, cls});
+    await saveStudents();
+    modal.innerHTML='';
+    renderStudentList();
+    toast(`${name} ಸೇರಿಸಲಾಗಿದೆ`);
+  };
+  document.getElementById('newName').focus();
+};
+
+document.getElementById('searchBox').oninput = renderStudentList;
+
+document.getElementById('btnClearAll').onclick = async ()=>{
+  if(students.length===0){ toast('ಪಟ್ಟಿ ಈಗಾಗಲೇ ಖಾಲಿ ಇದೆ'); return; }
+  if(confirm('ಎಲ್ಲಾ ವಿದ್ಯಾರ್ಥಿಗಳನ್ನು ಪಟ್ಟಿಯಿಂದ ಶಾಶ್ವತವಾಗಿ ಅಳಿಸುವುದೇ? (ಇದನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ)')){
+    students = [];
+    activeStudentId = null;
+    activeClassTab = 'all';
+    document.getElementById('searchBox').value = '';
+    await saveStudents();
+    renderClassTabs();
+    renderStudentList();
+    renderTrackArea();
+    toast('ಎಲ್ಲಾ ವಿದ್ಯಾರ್ಥಿಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ');
+  }
+};
+
+/* ---------------- EXCEL UPLOAD (table-aware: Student Name + Standard/Class columns) ---------------- */
+document.getElementById('btnExcel').onclick = ()=> document.getElementById('excelInput').click();
+document.getElementById('excelInput').onchange = async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  toast('ಎಕ್ಸೆಲ್ ಫೈಲ್ ಓದಲಾಗುತ್ತಿದೆ...');
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    const sheetName = wb.SheetNames[0];
+    const ws = wb.Sheets[sheetName];
+    // header:1 => array-of-arrays, one row per sheet row, easiest to scan for the header row
+    const grid = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
+
+    const cols = findColumns(grid);
+
+    if(cols){
+      const rowsOut = [];
+      for(let r = cols.headerRowIdx+1; r<grid.length; r++){
+        const row = grid[r];
+        if(!row) continue;
+        let nameCell = String(row[cols.nameIdx] ?? '').trim();
+        // Guard against a birthdate glued straight onto the end of a name
+        // with no space (seen in some source spreadsheets copied from PDFs).
+        nameCell = nameCell.replace(/\d{1,2}\/\d{1,2}\/\d{2,4}\s*$/,'').trim();
+        if(!nameCell) continue;
+        const stdCell = cols.stdIdx>=0 ? String(row[cols.stdIdx] ?? '').trim() : '';
+        rowsOut.push({ name: nameCell, rawStd: stdCell, cls: parseStandard(stdCell) });
+      }
+      if(rowsOut.length>0){
+        openExcelPreviewTable(rowsOut);
+      } else {
+        toast('ಹೆಸರುಗಳು ಪತ್ತೆಯಾಗಲಿಲ್ಲ');
+      }
+    } else {
+      // Fallback: no recognizable "Student Name" / "Standard" header found —
+      // flatten every non-empty cell into a plain name list.
+      excelExtracted = [];
+      grid.forEach(row=>{
+        (row||[]).forEach(cell=>{
+          const v = String(cell ?? '').trim();
+          if(v.length>1 && v.length<60 && !/^\d+([./]\d+)*$/.test(v)) excelExtracted.push(v);
+        });
+      });
+      if(excelExtracted.length===0){
+        toast('ಹೆಸರುಗಳು ಪತ್ತೆಯಾಗಲಿಲ್ಲ');
+        return;
+      }
+      toast('"Student Name"/"Standard" ಕಾಲಂ ಸಿಗಲಿಲ್ಲ — ಸಾಮಾನ್ಯ ಪಟ್ಟಿಯಾಗಿ ತೋರಿಸಲಾಗುತ್ತಿದೆ');
+      openExcelPreviewSimple();
+    }
+  }catch(err){
+    console.error(err);
+    toast('ಎಕ್ಸೆಲ್ ಓದುವಲ್ಲಿ ದೋಷ');
+  }finally{
+    e.target.value = '';
+  }
+};
+
+// Scan the sheet's rows for one that has both a "Student Name"-ish column
+// and a "Standard"-ish column, returning their indices. Returns null if
+// no such header row is found anywhere in the sheet.
+function findColumns(grid){
+  const nameKeywords = ['student name','name','ಹೆಸರು'];
+  const stdKeywords = ['standard','class','std','ತರಗತಿ'];
+  for(let r=0; r<Math.min(grid.length, 20); r++){
+    const row = grid[r] || [];
+    const norm = row.map(c=>String(c ?? '').toLowerCase().trim());
+    const nameIdx = norm.findIndex(c=>nameKeywords.some(k=>c.includes(k)));
+    const stdIdx = norm.findIndex(c=>stdKeywords.some(k=>c.includes(k)));
+    if(nameIdx>=0 && stdIdx>=0){
+      return { headerRowIdx:r, nameIdx, stdIdx };
+    }
+  }
+  return null;
+}
+
+// Convert a "Standard" cell like "5", "5th", "V", "05", "BOY 5" into a class number 1-7 (or null if unclear)
+function parseStandard(text){
+  if(!text) return null;
+  const t = text.toLowerCase().trim();
+  const digitMatch = t.match(/\d+/);
+  if(digitMatch){
+    const n = parseInt(digitMatch[0],10);
+    if(n>=1 && n<=7) return n;
+  }
+  const roman = {i:1, ii:2, iii:3, iv:4, v:5, vi:6, vii:7};
+  const cleaned = t.replace(/[^a-z]/g,'');
+  if(roman[cleaned]) return roman[cleaned];
+  return null;
+}
+
+// Preview modal for table-parsed rows (name auto-matched with detected standard/class)
+function openExcelPreviewTable(rows){
+  const modal = document.getElementById('modalRoot');
+  modal.innerHTML = `
+    <div class="modal-bg">
+      <div class="modal">
+        <h3>📊 ಎಕ್ಸೆಲ್ ಟೇಬಲ್‌ನಿಂದ ಪತ್ತೆಯಾದ ವಿದ್ಯಾರ್ಥಿಗಳು (${rows.length})</h3>
+        <div style="color:var(--chalk-dim);font-size:12.5px;margin-bottom:10px;">
+          "Student Name" ಮತ್ತು "Standard" ಕಾಲಂಗಳಿಂದ ಮಾತ್ರ ತೆಗೆದುಕೊಳ್ಳಲಾಗಿದೆ. ತರಗತಿ ಪತ್ತೆಯಾಗದ ಸಾಲುಗಳನ್ನು 🔴 ಗುರುತಿಸಿದೆ — ಅಲ್ಲಿ ಸರಿಯಾದ ತರಗತಿ ಆಯ್ಕೆಮಾಡಿ.
+        </div>
+        <div style="max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;">
+          ${rows.map((r,i)=>`
+            <div class="name-line" style="${r.cls?'':'border-left:3px solid var(--red);'}">
+              <span style="flex:1;"><input type="checkbox" data-idx="${i}" class="rowChk" checked> ${escapeHtml(r.name)} ${r.cls?'':'🔴'}</span>
+              <select data-rowcls="${i}">
+                ${CLASSES.map(c=>`<option value="${c}" ${((r.cls||1)===c)?'selected':''}>${c} ನೇ</option>`).join('')}
+              </select>
+            </div>`).join('')}
+        </div>
+        <div class="row" style="margin-top:14px;">
+          <button class="btn-amber" id="confirmExcelAdd">ಆಯ್ಕೆಮಾಡಿದವರನ್ನು ಸೇರಿಸಿ</button>
+          <button class="btn-ghost" id="cancelExcelAdd">ರದ್ದು</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('cancelExcelAdd').onclick = ()=> modal.innerHTML='';
+  document.getElementById('confirmExcelAdd').onclick = async ()=>{
+    const checks = modal.querySelectorAll('.rowChk');
+    let added = 0;
+    checks.forEach(chk=>{
+      if(chk.checked){
+        const i = Number(chk.dataset.idx);
+        const name = rows[i].name;
+        const clsSel = modal.querySelector(`[data-rowcls="${i}"]`);
+        const cls = Number(clsSel.value);
+        const dup = students.some(s=>s.name.toLowerCase()===name.toLowerCase() && s.cls===cls);
+        if(!dup){
+          students.push({id:'s_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)+i, name, cls});
+          added++;
+        }
+      }
+    });
+    await saveStudents();
+    modal.innerHTML = '';
+    activeClassTab = 'all';
+    document.getElementById('searchBox').value = '';
+    renderClassTabs();
+    renderStudentList();
+    toast(`${added} ವಿದ್ಯಾರ್ಥಿಗಳು ಸೇರಿಸಲಾಗಿದೆ`);
+  };
+}
+
+// Fallback preview (used only if the sheet isn't a recognizable table)
+function openExcelPreviewSimple(){
+  const modal = document.getElementById('modalRoot');
+  modal.innerHTML = `
+    <div class="modal-bg">
+      <div class="modal">
+        <h3>📊 ಎಕ್ಸೆಲ್‌ನಿಂದ ಪತ್ತೆಯಾದ ಹೆಸರುಗಳು (${excelExtracted.length})</h3>
+        <div class="row" style="margin-bottom:10px;">
+          <span>ಈ ಎಲ್ಲಾ ಹೆಸರುಗಳನ್ನು ಯಾವ ತರಗತಿಗೆ ಸೇರಿಸಬೇಕು?</span>
+          <select id="excelCls">${CLASSES.map(c=>`<option value="${c}">${c} ನೇ ತರಗತಿ</option>`).join('')}</select>
+        </div>
+        <div style="max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;">
+          ${excelExtracted.map((n,i)=>`
+            <label class="name-line">
+              <span><input type="checkbox" data-idx="${i}" class="rowChk" checked> ${escapeHtml(n)}</span>
+            </label>`).join('')}
+        </div>
+        <div class="row" style="margin-top:14px;">
+          <button class="btn-amber" id="confirmExcelAdd">ಆಯ್ಕೆಮಾಡಿದವರನ್ನು ಸೇರಿಸಿ</button>
+          <button class="btn-ghost" id="cancelExcelAdd">ರದ್ದು</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('cancelExcelAdd').onclick = ()=> modal.innerHTML='';
+  document.getElementById('confirmExcelAdd').onclick = async ()=>{
+    const cls = Number(document.getElementById('excelCls').value);
+    const checks = modal.querySelectorAll('.rowChk');
+    let added = 0;
+    checks.forEach(chk=>{
+      if(chk.checked){
+        const name = excelExtracted[Number(chk.dataset.idx)];
+        const dup = students.some(s=>s.name.toLowerCase()===name.toLowerCase() && s.cls===cls);
+        if(!dup){
+          students.push({id:'s_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name, cls});
+          added++;
+        }
+      }
+    });
+    await saveStudents();
+    modal.innerHTML = '';
+    activeClassTab = 'all';
+    document.getElementById('searchBox').value = '';
+    renderClassTabs();
+    renderStudentList();
+    toast(`${added} ವಿದ್ಯಾರ್ಥಿಗಳು ಸೇರಿಸಲಾಗಿದೆ`);
+  };
+}
+
+/* ---------------- TRACK AREA ---------------- */
+function renderTrackArea(){
+  const trackCard = document.getElementById('trackCard');
+  const noCard = document.getElementById('noStudentCard');
+  if(!activeStudentId){
+    trackCard.style.display='none';
+    noCard.style.display='block';
+    return;
+  }
+  trackCard.style.display='block';
+  noCard.style.display='none';
+  const s = students.find(x=>x.id===activeStudentId);
+  document.getElementById('activeBar').innerHTML = `
+    <span class="name">🎯 ${escapeHtml(s.name)}</span>
+    <span class="cls-badge" style="font-size:12px;">${s.cls} ನೇ ತರಗತಿ</span>
+  `;
+  document.querySelectorAll('#tabbar button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===activeTrackTab);
+  });
+  renderTabContent();
+}
+
+document.querySelectorAll('#tabbar button').forEach(b=>{
+  b.onclick = ()=>{ activeTrackTab = b.dataset.tab; renderTrackArea(); };
+});
+
+function renderTabContent(){
+  const el = document.getElementById('tabContent');
+  if(activeTrackTab==='numbers'){ renderNumbersTab(el); }
+  else if(activeTrackTab==='tables'){ renderTablesTab(el); }
+  else { renderOpTab(el, activeTrackTab); }
+}
+
+/* ---- NUMBERS TAB ---- */
+let numShuffleOn = false; // when true, numbers in the grid are shown in shuffled order
+let numShuffleOrders = {}; // cache: rangeIndex -> shuffled array of numbers for that range
+
+function renderNumbersTab(el){
+  const prog = progressCache[activeStudentId].numbers;
+  let rangeHtml = '';
+  for(let i=0;i<10;i++){
+    const start = i*100+1, end=i*100+100;
+    rangeHtml += `<button class="range-btn ${i===activeNumRange?'active':''}" data-range="${i}">${start}–${end}</button>`;
+  }
+  const start = activeNumRange*100+1;
+  let numsArr;
+  if(numShuffleOn){
+    if(!numShuffleOrders[activeNumRange]){
+      const arr = [];
+      for(let n=start;n<start+100;n++) arr.push(n);
+      for(let i=arr.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]] = [arr[j],arr[i]];
+      }
+      numShuffleOrders[activeNumRange] = arr;
+    }
+    numsArr = numShuffleOrders[activeNumRange];
+  } else {
+    numsArr = [];
+    for(let n=start;n<start+100;n++) numsArr.push(n);
+  }
+  let gridHtml = '';
+  for(const n of numsArr){
+    const state = prog[n]==='green' ? 'green':'';
+    gridHtml += `<button class="num-tile ${state}" data-num="${n}">${n}</button>`;
+  }
+  el.innerHTML = `
+    <div class="range-row">${rangeHtml}</div>
+    <div class="row" style="margin-bottom:14px;">
+      <button class="btn-amber" id="btnNumShuffle">${numShuffleOn ? '🔢 ಕ್ರಮವಾಗಿ ತೋರಿಸಿ' : '🔀 ಸಂಖ್ಯೆ ಅದಲು ಬದಲು ಮಾಡಿ'}</button>
+    </div>
+    <div class="num-grid">${gridHtml}</div>
+    <div style="margin-top:12px;color:var(--chalk-dim);font-size:12.5px;">
+      🟩 ಗುರುತಿಸಿದ ಸಂಖ್ಯೆ &nbsp; 🟥 ಇನ್ನೂ ಗುರುತಿಸಬೇಕಾದ ಸಂಖ್ಯೆ — ಸಂಖ್ಯೆಯ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ ಬದಲಾಯಿಸಿ
+    </div>
+  `;
+  document.getElementById('btnNumShuffle').onclick = ()=>{
+    numShuffleOn = !numShuffleOn;
+    if(numShuffleOn) delete numShuffleOrders[activeNumRange]; // force a fresh shuffle each time it's turned on
+    renderNumbersTab(el);
+  };
+  el.querySelectorAll('.range-btn').forEach(b=>{
+    b.onclick = ()=>{ activeNumRange = Number(b.dataset.range); renderNumbersTab(el); };
+  });
+  el.querySelectorAll('.num-tile').forEach(b=>{
+    b.onclick = async ()=>{
+      const n = b.dataset.num;
+      prog[n] = prog[n]==='green' ? undefined : 'green';
+      if(prog[n]===undefined) delete prog[n];
+      await saveProgress(activeStudentId);
+      renderNumbersTab(el);
+    };
+  });
+}
+
+/* ---- TABLES TAB (ಮಗ್ಗಿಗಳು) ---- */
+let selectedTable = null; // which table (2..20) is currently expanded
+let mgiShuffleOrder = null; // when set, an array of 1..10 in shuffled order (jumble mode is on)
+let mgiGreenSet = new Set(); // which multiplier (1..10) rows the child has correctly tapped this round
+
+function renderTablesTab(el){
+  const prog = progressCache[activeStudentId].tables;
+  let grid = '';
+  for(let t=2;t<=20;t++){
+    const st = prog[t] || '';
+    const sel = (selectedTable===t) ? 'sel' : '';
+    grid += `<button class="tbl-tile ${st} ${sel}" data-t="${t}">${t}ರ ಮಗ್ಗಿ</button>`;
+  }
+  const unknownList = Object.keys(prog).filter(k=>prog[k]==='unknown');
+
+  let detailHtml = '';
+  if(selectedTable){
+    const t = selectedTable;
+    const cur = prog[t] || '';
+    const order = mgiShuffleOrder || [1,2,3,4,5,6,7,8,9,10];
+    let rows = '';
+    for(const i of order){
+      const isGreen = mgiGreenSet.has(i) ? 'green' : '';
+      rows += `<button class="mgi-row mgi-tile ${isGreen}" data-i="${i}" style="cursor:pointer;">${t} x ${i} = ${t*i}</button>`;
+    }
+    detailHtml = `
+      <div class="mgi-detail">
+        <h3>${t}ರ ಮಗ್ಗಿ</h3>
+        <div class="mgi-rows">${rows}</div>
+        <div class="row" style="margin-top:12px;">
+          <button class="btn-amber" id="mgiShuffle">🔀 ಜೋಡಣೆ ಆಡಿ</button>
+          <button class="btn-amber" id="mgiKnown">✅ ಬರುತ್ತದೆ</button>
+          <button class="btn-danger" id="mgiUnknown">❌ ಬರುವುದಿಲ್ಲ</button>
+          <button class="btn-ghost" id="mgiReset">↩️ ಮರುಹೊಂದಿಸಿ</button>
+          <button class="btn-ghost" id="mgiClose">✕ ಮುಚ್ಚಿ</button>
+        </div>
+        <div style="margin-top:8px;color:var(--chalk-dim);font-size:12.5px;">
+          ಸದ್ಯದ ಸ್ಥಿತಿ: ${cur==='known' ? '🟩 ಬರುತ್ತದೆ' : cur==='unknown' ? '🟥 ಬರುವುದಿಲ್ಲ' : '⬜ ಇನ್ನೂ ಗುರುತಿಸಿಲ್ಲ'}
+          ${mgiShuffleOrder ? ' &nbsp;•&nbsp; ಮಗುವಿಗೆ ಬಂದ ಸಾಲನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ, ಅದು ಹಸಿರು ಬಣ್ಣಕ್ಕೆ ಬದಲಾಗುತ್ತದೆ' : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  el.innerHTML = `
+    <div class="table-grid">${grid}</div>
+    <div style="margin-bottom:14px;color:var(--chalk-dim);font-size:12.5px;">
+      ಒಂದು ಮಗ್ಗಿ ಬಟನ್ ಕ್ಲಿಕ್ ಮಾಡಿ ಪೂರ್ತಿ ಮಗ್ಗಿ ನೋಡಿ, ನಂತರ ಮಗುವಿಗೆ ಬರುತ್ತದೆಯೋ ಇಲ್ಲವೋ ಎಂದು ಗುರುತಿಸಿ.
+    </div>
+    ${detailHtml}
+    <div class="miss-box">
+      <h3>❗ ಬಾರದ ಮಗ್ಗಿಗಳು</h3>
+      <div id="missTables">
+        ${unknownList.length===0 ? '<span class="empty-note">ಎಲ್ಲಾ ಮಗ್ಗಿಗಳು ಸರಿ ಇವೆ 🎉</span>' :
+          unknownList.map(t=>`<span class="miss-chip">${t}ರ ಮಗ್ಗಿ <span class="x" data-clear="${t}">✕</span></span>`).join('')}
+      </div>
+    </div>
+  `;
+
+  el.querySelectorAll('.tbl-tile').forEach(b=>{
+    b.onclick = ()=>{
+      const t = Number(b.dataset.t);
+      selectedTable = (selectedTable===t) ? null : t;
+      mgiShuffleOrder = null;
+      mgiGreenSet = new Set();
+      renderTablesTab(el);
+    };
+  });
+
+  if(selectedTable){
+    const t = selectedTable;
+    document.getElementById('mgiShuffle').onclick = ()=>{
+      const order = [1,2,3,4,5,6,7,8,9,10];
+      for(let i=order.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [order[i],order[j]] = [order[j],order[i]];
+      }
+      mgiShuffleOrder = order;
+      mgiGreenSet = new Set();
+      renderTablesTab(el);
+    };
+    el.querySelectorAll('.mgi-tile').forEach(tile=>{
+      tile.onclick = ()=>{
+        const i = Number(tile.dataset.i);
+        mgiGreenSet.add(i);
+        renderTablesTab(el);
+      };
+    });
+    document.getElementById('mgiKnown').onclick = async ()=>{
+      prog[t] = 'known';
+      await saveProgress(activeStudentId);
+      renderTablesTab(el);
+    };
+    document.getElementById('mgiUnknown').onclick = async ()=>{
+      prog[t] = 'unknown';
+      await saveProgress(activeStudentId);
+      renderTablesTab(el);
+    };
+    document.getElementById('mgiReset').onclick = async ()=>{
+      delete prog[t];
+      await saveProgress(activeStudentId);
+      renderTablesTab(el);
+    };
+    document.getElementById('mgiClose').onclick = ()=>{
+      selectedTable = null;
+      mgiShuffleOrder = null;
+      mgiGreenSet = new Set();
+      renderTablesTab(el);
+    };
+  }
+
+  el.querySelectorAll('[data-clear]').forEach(x=>{
+    x.onclick = async ()=>{
+      delete prog[x.dataset.clear];
+      await saveProgress(activeStudentId);
+      renderTablesTab(el);
+    };
+  });
+}
+
+/* ---- OPERATION TABS (add/sub/mul/div) ---- */
+function randDigits(n){
+  if(n<=1) return Math.floor(Math.random()*9)+1;
+  const min = Math.pow(10,n-1), max = Math.pow(10,n)-1;
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+function generateProblem(op){
+  const level = Math.floor(Math.random()*7)+2; // 2..8 digits
+  let a,b,text,answer;
+  if(op==='add'){ a=randDigits(level); b=randDigits(level); text=`${a} + ${b}`; answer=a+b; }
+  else if(op==='sub'){ a=randDigits(level); b=randDigits(level); if(b>a){[a,b]=[b,a];} text=`${a} − ${b}`; answer=a-b; }
+  else if(op==='mul'){ a=randDigits(level); b=randDigits(level); text=`${a} × ${b}`; answer=a*b; }
+  else if(op==='div'){
+    const bd = Math.max(1, Math.floor(level/2));
+    b = randDigits(bd);
+    const q = randDigits(Math.max(1, level-String(b).length));
+    a = b*q;
+    text = `${a} ÷ ${b}`;
+    answer = q;
+  }
+  return { text, level, op, answer };
+}
+
+let showAnswer = {add:false, sub:false, mul:false, div:false};
+
+function renderOpTab(el, op){
+  const prog = progressCache[activeStudentId].wrong[op];
+  if(!currentProblem[op]) currentProblem[op] = generateProblem(op);
+  const p = currentProblem[op];
+  el.innerHTML = `
+    <div class="op-panel">
+      <div class="level-tag">${OP_LABELS[op]} · ${p.level} ಅಂಕಿಗಳ ಲೆಕ್ಕ</div>
+      <div class="problem">${p.text} = ${showAnswer[op] ? p.answer : '?'}</div>
+      <div class="row" style="justify-content:center;margin-bottom:16px;">
+        <button class="btn-outline" id="opToggleAns">${showAnswer[op] ? '🙈 ಉತ್ತರ ಮರೆಮಾಡಿ' : '👁️ ಉತ್ತರ ತೋರಿಸಿ'}</button>
+      </div>
+      <div class="judge-row">
+        <button class="btn-amber" id="opCorrect">✅ ಸರಿ ಬಂತು</button>
+        <button class="btn-danger" id="opWrong">❌ ಬರಲಿಲ್ಲ</button>
+        <button class="btn-ghost" id="opSkip">⏭ ಮುಂದಿನ ಲೆಕ್ಕ</button>
+      </div>
+    </div>
+    <div class="miss-box">
+      <h3>❗ ಬಾರದ ${OP_LABELS[op]} ಲೆಕ್ಕಗಳು (ಉತ್ತರ ಸಹಿತ)</h3>
+      <div id="missOps">
+        ${prog.length===0 ? '<span class="empty-note">ಇನ್ನೂ ಯಾವ ಲೆಕ್ಕವೂ ತಪ್ಪಾಗಿಲ್ಲ</span>' :
+          prog.map((t,i)=>`<span class="miss-chip">${escapeHtml(t)} <span class="x" data-i="${i}">✕</span></span>`).join('')}
+      </div>
+    </div>
+  `;
+  document.getElementById('opToggleAns').onclick = ()=>{
+    showAnswer[op] = !showAnswer[op];
+    renderOpTab(el, op);
+  };
+  document.getElementById('opCorrect').onclick = ()=>{
+    currentProblem[op] = generateProblem(op);
+    showAnswer[op] = false;
+    renderOpTab(el, op);
+  };
+  document.getElementById('opWrong').onclick = async ()=>{
+    const entry = `${p.text} = ${p.answer}`;
+    if(!prog.includes(entry)) prog.push(entry);
+    await saveProgress(activeStudentId);
+    currentProblem[op] = generateProblem(op);
+    showAnswer[op] = false;
+    renderOpTab(el, op);
+  };
+  document.getElementById('opSkip').onclick = ()=>{
+    currentProblem[op] = generateProblem(op);
+    showAnswer[op] = false;
+    renderOpTab(el, op);
+  };
+  el.querySelectorAll('[data-i]').forEach(x=>{
+    x.onclick = async ()=>{
+      prog.splice(Number(x.dataset.i),1);
+      await saveProgress(activeStudentId);
+      renderOpTab(el, op);
+    };
+  });
+}
+
+/* ---------------- INIT ---------------- */
+(async function init(){
+  await loadStudents();
+  renderClassTabs();
+  renderStudentList();
+  renderTrackArea();
+})();
+
+/* ---------------- PWA SERVICE WORKER ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./service-worker.js').catch(e=>console.warn('SW register failed', e));
+  });
+}
+</script>
+</body>
+</html>
